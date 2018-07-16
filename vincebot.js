@@ -3,19 +3,6 @@ var client = new Discordie();
 
 "use strict";
 
-//// note: run "npm install lame" in this folder first
-
-// audio example implemented using AudioEncoderStream
-
-// audio decoding using "lame"
-
-// commands:
-// ping
-// vjoin <channelname> -- joins matching channel for current guild
-// vleave
-// play -- plays test.mp3
-// stop
-
 var lame = require('lame');
 var fs = require('fs');
 
@@ -26,8 +13,6 @@ try { Discordie = require("discordie"); } catch(e) {}
 var client = new Discordie({autoReconnect: true});
 
 var auth = { token: "MjcyMDE4MjY5ODQ4ODYyNzIx.C2O4XA.cIi1O7qHM4WEfwk5uYAk8Tg_6q0" };
-//try { auth = require("./auth"); } catch(e) {}
-//var guild = null;
 
 client.connect(auth);
 
@@ -50,16 +35,30 @@ client.Dispatcher.on("MESSAGE_CREATE", (e) => {
   switch (content) {
     case "!vhelp":
       return e.message.reply("I REFUSE TO SIGN THE LEGISLATION THAT ALLOWS A HELP COMMAND");
-    break;
+    
+    case "!cum":
+      var info = client.VoiceConnections.getforGuild(guild);
+      var file = fs.createReadStream("cum.mp3");
+      
     //Leave the voice channel we're in
     case "!leave":
       leave();
     break;
+    
+    case "!shykel":
+      return e.message.reply("FUCK Shykel.");
 
     case "!enough":
     var info = client.VoiceConnections.getForGuild(guild);
-    if (info) playTheresOnlyEnough(info);
-
+    var file = fs.createReadStream("theresonlyenough.mp3");
+    if (info) play(info, file);
+    break;
+    
+    case "!sneezy":
+    var info = client.VoiceConnections.getForGuild(guild);
+    var file = fs.createReadStream("itsTheBrandNew.mp3");
+    if (info) play(info, file);
+    break;
   }
 
 // Join a specified voice channel
@@ -70,6 +69,10 @@ client.Dispatcher.on("MESSAGE_CREATE", (e) => {
       guild.voiceChannels
       .find(channel => channel.name.toLowerCase().indexOf(targetChannel) >= 0);
     if (vchannel) vchannel.join().then(info => playIntro(info));
+  }
+  
+  if (content.indexOf("!say ") == 0 ){
+    return e.message.reply(content.indexOf(content) >= 0);
   }
 
   if (content.indexOf("!play") == 0) {
@@ -89,27 +92,27 @@ client.Dispatcher.on("MESSAGE_CREATE", (e) => {
   }
 });
 
-// client.Dispatcher.on("VOICE_USER_SELF_MUTE", (e) => {
-//
-//   if (!guild)
-//   {
-//
-//     const channel = client.VoiceConnections.getForGuild(guild);
-//
-//     if (!channel) return console.log("Channel has been deleted");
-//
-//     //var decoder = e.voiceConnection.getDecoder();
-//
-//
-//     const user = channel.voiceConnection.ssrcToMember(packet.ssrc);
-//
-//     if (user.userName == "Risimo")
-//     {
-//       playIntro();
-//     }
-//   }
-//
-// });
+client.Dispatcher.on("VOICE_USER_SELF_MUTE", (e) => {
+
+  const guild = client.Guilds.getBy("id", "153308682350886912");
+  
+  if (!guild)
+  {
+    const channel = client.VoiceConnections.getForGuild(guild);
+
+    if (!channel) return console.log("Channel has been deleted");
+
+    //var decoder = e.voiceConnection.getDecoder();
+
+
+    const user = channel.voiceConnection.ssrcToMember(channel.content.user);
+    var info = client.VoiceConnections.getForGuild(guild);
+    
+    var file = fs.createReadStream("itsTheBrandNew.mp3");
+    if (info) play(info, file);
+  }
+
+});
 
 
 client.Dispatcher.on("VOICE_CONNECTED", e => {
@@ -124,7 +127,7 @@ function leave()
   .forEach(channel => channel.leave());
 }
 
-function playTheresOnlyEnough(info) {
+function play(info, file) {
   if (!client.VoiceConnections.length) {
     return console.log("Voice not connected");
   }
@@ -132,7 +135,7 @@ function playTheresOnlyEnough(info) {
   if (!info) info = client.VoiceConnections[0];
 
   var mp3decoder = new lame.Decoder();
-  var file = fs.createReadStream("theresonlyenough.mp3");
+  //file = fs.createReadStream("theresonlyenough.mp3");
   file.pipe(mp3decoder);
 
   mp3decoder.on('format', pcmfmt => {
